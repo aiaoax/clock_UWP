@@ -27,7 +27,7 @@ namespace clock_UWP {
 		public MainPage() {
 			InitializeComponent();
 			timer.Tick += Timer_Tick;
-			timer.Interval = new TimeSpan(0,0,0,0,1000);
+			timer.Interval = new TimeSpan(0,0,0,0,100);
 			ApplicationSetting.rootPage = this;
 			timeSetAsync();
 			timer.Start();
@@ -43,21 +43,24 @@ namespace clock_UWP {
 				await MessageBox.ShowAsync(ex.Message);
 				Debug.WriteLine(ex.Message);
 			}
+			timeSetAsync();
 		}
 
 		private void Timer_Tick(object sender,object e) {
-			dt = dt.AddSeconds(1);
-			if(dt.Minute == 0) {
+			dt = DateTime.Now.Add(ts);
+			if(dt.Minute == 0 && dt.Second < 1) {
 				timeSetAsync();
 			}
 			R_time.Text = $"{dt:HH\\:mm\\:ss}";
-
 			R_date.Text = $"{dt:yyyy/MM/dd (ddd)}";
+
 		}
 
 		DateTime dt;
+		TimeSpan ts;
 
 		DispatcherTimer timer = new DispatcherTimer();
+
 
 		async void timeSetAsync() {
 			try {
@@ -66,12 +69,14 @@ namespace clock_UWP {
 				html = Regex.Replace(html,"<.*>","",RegexOptions.Multiline).Trim();
 				var ntp = (double.Parse(html));
 				dt = new DateTime(1900,1,1,9,0,0).AddSeconds(ntp);
-				R_time.Text = $"{dt:HH\\:mm\\:ss}";
-				R_date.Text = $"{dt:yyyy/MM/dd (ddd)}";
+				ts = dt - DateTime.Now;
+				//R_time.Text = $"{dt:HH\\:mm\\:ss}";
+				//R_date.Text = $"{dt:yyyy/MM/dd (ddd)}";
 			}
 			catch(Exception ex) {
 				await MessageBox.ShowAsync(ex.Message);
 				Debug.WriteLine(ex.Message);
+				dt = DateTime.Now;
 			}
 		}
 
@@ -82,6 +87,7 @@ namespace clock_UWP {
 			else {
 				ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
 			}
+			timeSetAsync();
 		}
 	}
 }
